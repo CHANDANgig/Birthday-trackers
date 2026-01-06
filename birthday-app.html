@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birthday Reminder</title>
+    <style>
+        body { font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        h1 { text-align: center; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #218838; }
+        ul { list-style: none; padding: 0; }
+        li { background: #fff; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .today-highlight { background-color: #ffeeba; border: 2px solid #ffc107; padding: 15px; margin-bottom: 20px; text-align: center; display: none; border-radius: 8px; }
+        .delete-btn { background: #dc3545; width: auto; padding: 5px 10px; font-size: 12px; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>🎂 Birthday Tracker</h1>
+
+    <!-- Notification Area -->
+    <div id="notificationArea" class="today-highlight">
+        <h3>🎉 IT'S A BIRTHDAY TODAY! 🎉</h3>
+        <p id="todayNames"></p>
+    </div>
+
+    <!-- Add New Birthday -->
+    <div class="card">
+        <h3>Add Person</h3>
+        <input type="text" id="nameInput" placeholder="Name (e.g. John)" />
+        <input type="date" id="dateInput" />
+        <button onclick="addBirthday()">Save Birthday</button>
+    </div>
+
+    <!-- List of Birthdays -->
+    <h3>All Birthdays</h3>
+    <ul id="birthdayList"></ul>
+
+    <script>
+        // 1. Load data from local storage
+        let birthdays = JSON.parse(localStorage.getItem('myBirthdays')) || [];
+
+        function renderList() {
+            const list = document.getElementById('birthdayList');
+            const notifyArea = document.getElementById('notificationArea');
+            const todayNamesDisplay = document.getElementById('todayNames');
+            list.innerHTML = '';
+            
+            let today = new Date();
+            let todayMonth = today.getMonth() + 1; // JS months are 0-11
+            let todayDay = today.getDate();
+            let todaysBirthdays = [];
+
+            // 2. Loop through list to display and check dates
+            birthdays.forEach((person, index) => {
+                const bdate = new Date(person.date);
+                const bMonth = bdate.getMonth() + 1;
+                const bDay = bdate.getDate();
+
+                // Check if birthday is today
+                if (bMonth === todayMonth && bDay === todayDay) {
+                    todaysBirthdays.push(person.name);
+                }
+
+                // Create list item
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><b>${person.name}</b> - ${bdate.toDateString().slice(4, 10)}</span>
+                    <button class="delete-btn" onclick="deleteBirthday(${index})">X</button>
+                `;
+                list.appendChild(li);
+            });
+
+            // 3. Show notification if someone matches today
+            if (todaysBirthdays.length > 0) {
+                notifyArea.style.display = 'block';
+                todayNamesDisplay.innerText = todaysBirthdays.join(', ');
+            } else {
+                notifyArea.style.display = 'none';
+            }
+        }
+
+        function addBirthday() {
+            const name = document.getElementById('nameInput').value;
+            const date = document.getElementById('dateInput').value;
+
+            if (name && date) {
+                birthdays.push({ name, date });
+                localStorage.setItem('myBirthdays', JSON.stringify(birthdays)); // Save to browser
+                document.getElementById('nameInput').value = '';
+                document.getElementById('dateInput').value = '';
+                renderList();
+            } else {
+                alert("Please enter both a name and a date.");
+            }
+        }
+
+        function deleteBirthday(index) {
+            birthdays.splice(index, 1);
+            localStorage.setItem('myBirthdays', JSON.stringify(birthdays));
+            renderList();
+        }
+
+        // Run on startup
+        renderList();
+    </script>
+</body>
+</html>
